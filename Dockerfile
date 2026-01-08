@@ -21,6 +21,9 @@ COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY env.sh /docker-entrypoint.d/env.sh
 
+# Corrigir quebras de linha do Windows (CRLF) para Unix (LF)
+RUN sed -i 's/\r$//' /docker-entrypoint.d/env.sh
+
 # Tornar script executável (garantia extra)
 RUN chmod +x /docker-entrypoint.d/env.sh
 
