@@ -25,3 +25,16 @@ dist-ssr
 
 # User specific ignores
 *.csv
+.env.local
+processados/
+Dockerfile
+docker-compose.yaml
+nginx.conf
+.env
+GEMINI.md
+portainer-stack.yaml
+env.sh
+
+# Documentation (Keep only README)
+*.md
+!README.md
