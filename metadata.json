@@ -1,0 +1,5 @@
+{
+  "name": "InstaAnalyzer Pro",
+  "description": "An advanced Instagram lead analysis tool that scrapes profile data via Apify and uses Gemini AI to categorize niches and evaluate engagement recency.",
+  "requestFramePermissions": []
+}
