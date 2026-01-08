@@ -8,13 +8,30 @@ import { batchAnalyzeNiches } from './geminiService';
  * @param apifyToken - Token da API do Apify
  * @param onProgress - Callback para atualizar progresso
  */
+// Helper para ler variáveis de ambiente (Runtime Docker ou Dev Local)
+const getEnv = (key: string) => {
+  if (typeof window !== 'undefined' && window.env && window.env[key]) {
+    return window.env[key];
+  }
+  return import.meta.env[key];
+};
+
+/**
+ * Função principal para executar o scraper
+ * @param urls - Array de URLs de perfis do Instagram
+ * @param apifyToken - Token da API do Apify
+ * @param onProgress - Callback para atualizar progresso
+ */
 export const runInstagramScraper = async (
   urls: string[],
   apifyToken: string,
   onProgress: (profiles: InstagramProfile[]) => void
 ) => {
   // Se não tiver token ou for DEMO, usa simulação
-  if (!apifyToken || apifyToken === 'DEMO') {
+  // Também checa se o token veio vazio mas existe no env (fallback de segurança)
+  const effectiveToken = apifyToken || getEnv('VITE_APIFY_API_TOKEN');
+
+  if (!effectiveToken || effectiveToken === 'DEMO') {
     console.log('🎭 Modo DEMO ativado - usando dados simulados');
     return simulateScraping(urls, onProgress);
   }

@@ -2,8 +2,15 @@
 import { createClient } from '@supabase/supabase-js';
 import { InstagramProfile } from '../types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY || '';
+const getEnv = (key: string) => {
+  if (typeof window !== 'undefined' && window.env && window.env[key]) {
+    return window.env[key];
+  }
+  return import.meta.env[key] || '';
+};
+
+const SUPABASE_URL = getEnv('VITE_SUPABASE_URL');
+const SUPABASE_KEY = getEnv('VITE_SUPABASE_KEY');
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
