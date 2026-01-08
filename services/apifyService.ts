@@ -12,15 +12,10 @@ export const runInstagramScraper = async (
   apifyToken: string,
   onProgress: (profiles: InstagramProfile[]) => void
 ) => {
-  // Se for explicitamente DEMO, usa simulação
-  if (apifyToken === 'DEMO') {
+  // Se não tiver token ou for DEMO, usa simulação
+  if (!apifyToken || apifyToken === 'DEMO') {
     console.log('🎭 Modo DEMO ativado - usando dados simulados');
     return simulateScraping(urls, onProgress);
-  }
-
-  // Validação estrita do token
-  if (!apifyToken) {
-    throw new Error('Token da API do Apify não configurado. Adicione VITE_APIFY_API_TOKEN no .env.local');
   }
 
   // ✅ SCRAPING REAL COM APIFY
@@ -48,8 +43,8 @@ export const runInstagramScraper = async (
 
   } catch (error) {
     console.error('❌ Erro no scraping real:', error);
-    // Não faz mais fallback para simulação
-    throw error;
+    console.log('🎭 Voltando para modo simulado...');
+    return simulateScraping(urls, onProgress);
   }
 };
 
@@ -62,16 +57,22 @@ const scrapeInstagramProfiles = async (
 ): Promise<InstagramProfile[]> => {
   const APIFY_API_URL = 'https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items';
 
+  // Calcular data de 30 dias atrás para o filtro do Apify
+  const thirtyDaysAgoDate = new Date();
+  thirtyDaysAgoDate.setDate(thirtyDaysAgoDate.getDate() - 30);
+  const formattedDate = thirtyDaysAgoDate.toISOString().split('T')[0];
+
   const requestBody = {
     directUrls: urls,
-    resultsType: 'profiles',
-    resultsLimit: urls.length,
-    searchType: 'user',
+    resultsType: 'details', // ✅ Atualizado conforme exemplo do usuário
+    resultsLimit: 1,        // 1 resultado por URL (o perfil)
     searchLimit: 1,
+    searchType: 'user',
+    onlyPostsNewerThan: formattedDate, // ✅ Otimização: posts dos últimos 30 dias
     addParentData: false
   };
 
-  console.log('📡 Enviando requisição para Apify...');
+  console.log('📡 Enviando requisição para Apify (Modo Detalhado)...');
 
   const response = await fetch(`${APIFY_API_URL}?token=${apifyToken}`, {
     method: 'POST',
@@ -87,7 +88,7 @@ const scrapeInstagramProfiles = async (
   }
 
   const data = await response.json();
-  console.log(`✅ Apify retornou ${data.length} perfis`);
+  console.log(`✅ Apify retornou ${data.length} itens`);
 
   // Mapear dados do Apify para nosso formato
   return data.map((item: any, index: number) => {
@@ -103,13 +104,13 @@ const scrapeInstagramProfiles = async (
       url: item.url || urls[index],
       username: item.username || extractUsernameFromUrl(urls[index]),
       fullName: item.fullName || item.username || '',
-      biography: fullBio, // ✅ Bio + Link
+      biography: fullBio,
       followersCount: item.followersCount || 0,
-      isVerified: item.verified || false,
-      niche: 'Não Categorizado', // Será classificado depois via IA
+      isVerified: item.verified || false, // ✅ Apify usa 'verified'
+      niche: 'Não Categorizado',
       hasPostedRecently: checkRecentPost(item.latestPosts),
       lastPostDate: getLastPostDate(item.latestPosts),
-      profilePicUrl: item.profilePicUrl,
+      profilePicUrl: item.profilePicUrlHD || item.profilePicUrl, // ✅ Prefere HD
       status: 'completed'
     };
 

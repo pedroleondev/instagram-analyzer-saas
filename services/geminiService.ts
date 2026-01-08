@@ -1,11 +1,10 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
 
 export const analyzeProfileNiche = async (fullName: string, bio: string): Promise<string> => {
-  if (!apiKey) return "Não Categorizado";
+  if (!import.meta.env.VITE_GEMINI_API_KEY) return "Não Categorizado";
 
   try {
     const response = await ai.models.generateContent({
@@ -32,7 +31,7 @@ export const analyzeProfileNiche = async (fullName: string, bio: string): Promis
 };
 
 export const batchAnalyzeNiches = async (profiles: { fullName: string; bio: string }[]) => {
-  if (!apiKey) return profiles.map(() => "Não Categorizado");
+  if (!import.meta.env.VITE_GEMINI_API_KEY) return profiles.map(() => "Não Categorizado");
 
   try {
     const response = await ai.models.generateContent({
