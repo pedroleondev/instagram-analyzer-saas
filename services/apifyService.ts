@@ -86,12 +86,19 @@ const scrapeInstagramProfiles = async (
 
   // Mapear dados do Apify para nosso formato
   return data.map((item: any, index: number) => {
+    // Capturar biografia e link externo para montar a bio completa
+    const rawBio = item.biography || '';
+    const externalUrl = item.externalUrl || '';
+
+    // Adiciona o link ao final da bio se existir (como no app do Instagram)
+    const fullBio = externalUrl ? `${rawBio}\n\n🔗 ${externalUrl}` : rawBio;
+
     const profile: InstagramProfile = {
       id: item.id || Math.random().toString(36).substr(2, 9),
       url: item.url || urls[index],
       username: item.username || extractUsernameFromUrl(urls[index]),
       fullName: item.fullName || item.username || '',
-      biography: item.biography || '', // ✅ BIO REAL DO INSTAGRAM
+      biography: fullBio, // ✅ Bio + Link
       followersCount: item.followersCount || 0,
       isVerified: item.verified || false,
       niche: 'Não Categorizado', // Será classificado depois via IA
@@ -160,22 +167,6 @@ const simulateScraping = async (urls: string[], onProgress: (profiles: Instagram
     "Moda"
   ];
 
-  // ✅ Biografias realistas com links e formatação (similar ao Instagram)
-  const realisticBios = [
-    "🚀 Especialista em Alta Performance | Transformando negócios\n📈 +10k alunos\n📩 contato@exemplo.com\n👇 Acesse meu curso",
-    "💡 Consultoria em Crescimento Digital | +10k alunos\n🎯 Resultados reais em 90 dias\n📲 WhatsApp: (11) 99999-9999\n🔗 linktr.ee/exemplo",
-    "📈 Mentor de Marketing de Conteúdo\n💰 7 dígitos faturados\n📚 Autor de 3 livros\n🎓 Cursos: exemplo.com.br",
-    "🔥 Focado em Estratégias de Venda\n✅ Transformando negócios desde 2015\n📧 contato@vendas.com\n👉 Link na bio",
-    "💼 Advogado | Direito Empresarial\n⚖️ OAB/SP 123.456\n📍 São Paulo - SP\n📞 (11) 3333-4444",
-    "💰 Investimentos e Finanças Pessoais\n📊 Analista CNPI\n🎯 Educação financeira\n🔗 meusite.com.br",
-    "✈️ Viajante profissional | 50+ países\n📸 Fotografia de viagens\n🌍 Próximo destino: Japão\n👇 Dicas de viagem",
-    "🏋️ Personal Trainer | Transformação física\n💪 +500 alunos transformados\n📱 App: FitCoach\n📩 DM para consultoria",
-    "👗 Consultora de Moda | Personal Stylist\n✨ Transformando looks desde 2018\n📍 Rio de Janeiro\n📲 Agendamentos: (21) 98888-7777",
-    "🎨 Designer Gráfico | Branding\n💻 Freelancer\n🏆 Prêmio Design 2023\n🔗 portfolio.com",
-    "📱 Desenvolvedor Full Stack\n💻 React | Node.js | TypeScript\n🚀 Tech Lead @Empresa\n🔗 github.com/exemplo",
-    "🧘‍♀️ Instrutora de Yoga | Bem-estar\n🌿 Certificada RYT 500h\n📍 Aulas presenciais e online\n📩 contato@yoga.com"
-  ];
-
   const results: InstagramProfile[] = [];
 
   for (let i = 0; i < urls.length; i++) {
@@ -184,8 +175,8 @@ const simulateScraping = async (urls: string[], onProgress: (profiles: Instagram
     const url = urls[i];
     const username = url.split('/').pop()?.replace(/\/$/, '') || `user_${i}`;
 
-    // ✅ Usar biografia realista (com links e formatação)
-    const bio = realisticBios[i % realisticBios.length];
+    // ✅ Biografia genérica para simulação
+    const bio = "Biografia simulada para testes (Modo DEMO).\nAdicione um token válido do Apify para ver dados reais.";
 
     // Gerar data precisa (de 0 a 90 dias atrás)
     const daysAgo = Math.floor(Math.random() * 95);
