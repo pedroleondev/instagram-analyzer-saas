@@ -5,7 +5,7 @@ import { InstagramProfile } from '../types';
 
 interface ProfileTableProps {
   profiles: InstagramProfile[];
-  onExport: (format: 'csv' | 'json' | 'md') => void;
+  onExport: (format: 'csv' | 'json' | 'md' | 'pdf') => void;
 }
 
 const ProfileTable: React.FC<ProfileTableProps> = ({ profiles, onExport }) => {
@@ -38,7 +38,7 @@ const ProfileTable: React.FC<ProfileTableProps> = ({ profiles, onExport }) => {
   });
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div id="leads-card-container" className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -64,15 +64,31 @@ const ProfileTable: React.FC<ProfileTableProps> = ({ profiles, onExport }) => {
             </select>
           </div>
 
-          <button onClick={() => onExport('csv')} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            <Download className="w-4 h-4" />
-            Exportar
-          </button>
+          <div className="relative group">
+            <select
+              className="appearance-none bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 pl-10 pr-8 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val) {
+                  onExport(val as 'csv' | 'json' | 'md' | 'pdf');
+                  e.target.value = '';
+                }
+              }}
+              defaultValue=""
+            >
+              <option value="" disabled>Exportar</option>
+              <option value="csv">CSV</option>
+              <option value="json">JSON</option>
+              <option value="md">Markdown</option>
+              <option value="pdf">PDF</option>
+            </select>
+            <Download className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
+          </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+      <div id="leads-table-container" className="overflow-x-auto">
+        <table id="leads-table" className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
               <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Perfil</th>

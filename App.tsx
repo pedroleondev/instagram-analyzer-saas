@@ -6,6 +6,7 @@ import ProfileTable from './components/ProfileTable';
 import { InstagramProfile, ScrapingStats } from './types';
 import { runInstagramScraper } from './services/apifyService';
 import { saveLeadsToDB, fetchLeadsFromDB } from './services/supabaseService';
+import { generateAnalysisPDF } from './utils/pdfGenerator';
 
 const App: React.FC = () => {
   const [profiles, setProfiles] = useState<InstagramProfile[]>([]);
@@ -102,7 +103,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleExport = (format: 'csv' | 'json' | 'md') => {
+  const handleExport = async (format: 'csv' | 'json' | 'md' | 'pdf') => {
     let content = '';
     let filename = `instagram_leads_${new Date().toISOString().split('T')[0]}`;
 
@@ -116,7 +117,7 @@ const App: React.FC = () => {
     } else if (format === 'json') {
       content = JSON.stringify(profiles, null, 2);
       filename += '.json';
-    } else {
+    } else if (format === 'md') {
       content = `# Relatório de Leads Instagram - ${new Date().toLocaleDateString()}\n\n`;
       content += `| Username | Nome | Nicho | Seguidores | Verificado | Ativo |\n`;
       content += `| --- | --- | --- | --- | --- | --- |\n`;
@@ -124,8 +125,13 @@ const App: React.FC = () => {
         content += `| @${p.username} | ${p.fullName} | ${p.niche} | ${p.followersCount.toLocaleString()} | ${p.isVerified ? '✅' : '❌'} | ${p.hasPostedRecently ? '🔥' : '❄️'} |\n`;
       });
       filename += '.md';
+    } else if (format === 'pdf') {
+      generateAnalysisPDF(profiles, filename);
+      return;
     }
 
+
+    // Download file for non-PDF formats
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
