@@ -1,5 +1,6 @@
 
 import { InstagramProfile } from '../types';
+import { batchAnalyzeNiches } from './geminiService';
 
 /**
  * Executa scraping de perfis do Instagram usando Apify
@@ -31,7 +32,25 @@ export const runInstagramScraper = async (
       const batch = urls.slice(i, i + batchSize);
       console.log(`📦 Processando lote ${Math.floor(i / batchSize) + 1}/${Math.ceil(urls.length / batchSize)}`);
 
+      // 1. Scraping dos dados brutos
       const batchResults = await scrapeInstagramProfiles(batch, apifyToken);
+
+      // 2. Análise de Nicho com IA (Gemini) em lote
+      console.log('🤖 Analisando nichos com Gemini...');
+      const profilesToAnalyze = batchResults.map(p => ({
+        fullName: p.fullName,
+        bio: p.biography,
+        username: p.username,
+        url: p.url
+      }));
+
+      const niches = await batchAnalyzeNiches(profilesToAnalyze);
+
+      // 3. Atualizar perfis com os nichos encontrados
+      batchResults.forEach((profile, index) => {
+        profile.niche = niches[index] || "Geral";
+      });
+
       results.push(...batchResults);
 
       // Atualizar progresso
@@ -90,8 +109,8 @@ const scrapeInstagramProfiles = async (
   const data = await response.json();
   console.log(`✅ Apify retornou ${data.length} itens`);
 
-  // Mapear dados do Apify para nosso formato
-  return data.map((item: any, index: number) => {
+  // 1. Mapeamento inicial com "Análise Pendente"
+  const profiles: InstagramProfile[] = data.map((item: any, index: number) => {
     // Capturar biografia e link externo para montar a bio completa
     const rawBio = item.biography || '';
     const externalUrl = item.externalUrl || '';
@@ -99,7 +118,7 @@ const scrapeInstagramProfiles = async (
     // Adiciona o link ao final da bio se existir (como no app do Instagram)
     const fullBio = externalUrl ? `${rawBio}\n\n🔗 ${externalUrl}` : rawBio;
 
-    const profile: InstagramProfile = {
+    return {
       id: item.id || Math.random().toString(36).substr(2, 9),
       url: item.url || urls[index],
       username: item.username || extractUsernameFromUrl(urls[index]),
@@ -107,16 +126,43 @@ const scrapeInstagramProfiles = async (
       biography: fullBio,
       followersCount: item.followersCount || 0,
       isVerified: item.verified || false, // ✅ Apify usa 'verified'
-      niche: 'Não Categorizado',
+      niche: 'Analisando...', // ✅ Placeholder enquanto o Gemini processa
       hasPostedRecently: checkRecentPost(item.latestPosts),
       lastPostDate: getLastPostDate(item.latestPosts),
       profilePicUrl: item.profilePicUrlHD || item.profilePicUrl, // ✅ Prefere HD
       status: 'completed'
     };
-
-    console.log(`✅ Perfil mapeado: @${profile.username} - ${profile.followersCount} seguidores`);
-    return profile;
   });
+
+  // 2. Enriquecimento com IA (Gemini)
+  console.log('🤖 Iniciando análise de nicho com IA...');
+  try {
+    const profilesToAnalyze = profiles.map(p => ({
+      username: p.username,
+      fullName: p.fullName,
+      bio: p.biography
+    }));
+
+    const niches = await batchAnalyzeNiches(profilesToAnalyze);
+
+    // Atualizar perfis com os nichos encontrados
+    profiles.forEach((profile, index) => {
+      profile.niche = niches[index] || 'Não Identificado';
+    });
+
+    console.log('✨ Análise de nicho concluída!');
+  } catch (error) {
+    console.error('⚠️ Falha ao analisar nichos com IA:', error);
+    // Fallback silencioso mantendo "Analisando..." ou mudando para "Não Identificado"
+    profiles.forEach(p => p.niche = 'Não Identificado');
+  }
+
+  // 3. Retornar perfis enriquecidos
+  profiles.forEach(p => {
+    console.log(`✅ Perfil mapeado: @${p.username} - ${p.followersCount} seguidores - Nicho: ${p.niche}`);
+  });
+
+  return profiles;
 };
 
 /**
