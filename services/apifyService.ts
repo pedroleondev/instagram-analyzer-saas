@@ -12,10 +12,15 @@ export const runInstagramScraper = async (
   apifyToken: string,
   onProgress: (profiles: InstagramProfile[]) => void
 ) => {
-  // Se não tiver token ou for DEMO, usa simulação
-  if (!apifyToken || apifyToken === 'DEMO') {
+  // Se for explicitamente DEMO, usa simulação
+  if (apifyToken === 'DEMO') {
     console.log('🎭 Modo DEMO ativado - usando dados simulados');
     return simulateScraping(urls, onProgress);
+  }
+
+  // Validação estrita do token
+  if (!apifyToken) {
+    throw new Error('Token da API do Apify não configurado. Adicione VITE_APIFY_API_TOKEN no .env.local');
   }
 
   // ✅ SCRAPING REAL COM APIFY
@@ -43,8 +48,8 @@ export const runInstagramScraper = async (
 
   } catch (error) {
     console.error('❌ Erro no scraping real:', error);
-    console.log('🎭 Voltando para modo simulado...');
-    return simulateScraping(urls, onProgress);
+    // Não faz mais fallback para simulação
+    throw error;
   }
 };
 
