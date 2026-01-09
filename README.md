@@ -302,8 +302,8 @@ Este projeto é de uso proprietário.
 
 *Full Stack Developer & AI Specialist*
 
-[![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com/pedro-leon)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0a66c2?logo=linkedin)](https://linkedin.com/in/pedro-leon)
+[![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com/pedroleondev)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0a66c2?logo=linkedin)](https://www.linkedin.com/in/bypedroleon/)
 
 **Construído com ❤️ e TypeScript**
 
